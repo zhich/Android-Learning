@@ -1,11 +1,14 @@
-- [生命周期](#生命周期)
-- [启动模式](#启动模式)
+- [Activity正常生命周期流程](#activity正常生命周期流程)
+- [Activity异常情况生命周期分析](#activity异常情况生命周期分析)
+- [Activity生命周期附加说明](#activity生命周期附加说明)
+- [configChanges属性的应用](#configchanges属性的应用)
+- [Activity启动模式](#activity启动模式)
 
 
 
 
 
-### 生命周期
+### Activity正常生命周期流程
 
 Activity 的生命周期回调方法有：onCreate() , onStart() , onResume() , onPause() , onStop() , onRestart() , onDestroy() . 
 
@@ -40,3 +43,43 @@ Activity 的生命周期回调方法有：onCreate() , onStart() , onResume() , 
 > 通常情况下：onCreate() 和 onDestroy() 成对存在；onStart() 和 onStop() 成对存在；onResume() 和 onPause() 成对存在。
 
 ![](https://github.com/zhich/git_resource/blob/master/Android-Learning/activity_lifecycle.png)
+
+### Activity异常情况生命周期分析
+
+- 系统资源配置发生改变导致 Activity 被杀死并重新创建
+
+  当系统配置发生变化（如旋转屏幕），Activity 会被销毁，其 onPause、onStop、onDestroy 均会被调用，同时由于 Activity 是在异常情况下终止的，系统会调用 **onSaveInstanceState** 来保存当前 Activity 的状态。**onSaveInstanceState 方法的调用时机是在 onStop 之前**，它和 onPause 没有既定的时序关系。当 Activity 被重建后，系统会调用 **onRestoreInstanceState** , 并把 Activity 销毁时的 onSaveInstanceState 方法所保存的 Bundle 对象作为参数同时传递给 onRestoreInstanceState 和 onCreate 方法。因此可以通过 onRestoreInstanceState 和 onCreate 方法来判断 Activity 是否被重建了，如果被重建了，我们就可以取出之前保存的数据并恢复，从时序上说，**onRestoreInstanceState 的调用时机在 onStart 之后。**
+
+  系统只在 Activity 异常终止的时候才会调用 onSaveInstanceState 和 onRestoreInstanceState 来存储和恢复数据，其他情况不会触发这个过程，但是按 Home 键或启动新 Activity 仍然会触发 onSaveInstanceState 的调用。
+
+  在 onSaveInstance 和 onRestoreInstanceState 方法中，系统自动为我们做了一定的恢复工作。当 Activity 在异常情况下需要重建时，系统会默认保存了当前 Activity 的视图结构，并且在 Activity 重启后为我们恢复这些数据，如文本框中用户的输入数据、ListView 滚动位置等。
+
+  **在 onCreate 和 onRestoreInstanceState 中接收保存的数据的区别是**：onRestoreInstanceState 一旦被调用，其参数 savedIntanceState 一定有值，而不需要额外判断它是否为空；但是 onCreate 如果是正常启动的话，其参数 saveInstanceState 为 null , 所以必须额外判断。官方文档建议采用 onRestoreInstance 去恢复数据。
+
+- 资源内存不足导致低优先级的 Activity 被杀死
+
+  Activity 按优先级从高到低如下：
+
+  - **前台 Activity** , 正在与用户交互的 Activity，优先级最高。
+  - **可见但非前台 Activity** , 如 Activity 中弹出一个对话框，导致 Activity 可见但是位于后台无法与用户直接交互。
+  - **后台 Activity** , 已经被停止的 Activity , 如执行了 onStop , 优先级最低。
+
+  当系统内存不足时，系统就会按照上述优先级去杀死目标 Activity 所在的进程，并在后续通过 onSaveInstanceState 和 onRestoreInstanceState 来存储和恢复数据。如果一个进程中没有四大组件在执行，那么这个进程很快被系统杀死，因此，**一些后台工作不适合脱离四大组件而独自运行在后台中，这样进程很容易被杀死**。比较好的方法是将后台工作放在 Service 中从而保证进程有一定的优先级，这样就不会轻易被系统杀死。
+
+### Activity生命周期附加说明
+
+1. 当用户打开新的 Activity 或切换到桌面时，回调如下：onPause --> onStop . 但是有一种情况，如果新 Activity 采用了**透明主题**，那么当前 Activity 不会调用 onStop .
+
+2. 不能在 onPause 中做重量级的操作，因为必须 onPause 执行完成后新启动的 Activity 才能 Resume .
+
+### configChanges属性的应用
+
+1. 防止屏幕旋转时 Activity 重启
+
+```xml
+android:configChanges="orientation | screenSize"
+```
+
+有了上面的设置，系统会调用 Activity 的 onConfigurationChanged 方法，此时我们可以做一些自己的特殊处理。
+
+### Activity启动模式
