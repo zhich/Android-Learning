@@ -12,6 +12,8 @@
 - [Fragment常用的API](#fragment常用的api)
 - [执行Fragment事务](#执行fragment事务)
 - [Fragment生命周期](#fragment生命周期)
+  - [Fragment依附于Activity的生命状态](#fragment依附于activity的生命状态)
+  - [Fragment生命周期回调方法含义](#fragment生命周期回调方法含义)
 - [与Activity通信](#与activity通信)
 - [Fragment状态的持久化](#fragment状态的持久化)
 
@@ -217,6 +219,61 @@ transaction.commit(); //提交一个事务
 
 ## Fragment生命周期
 
+### Fragment依附于Activity的生命状态
+
+![Mou icon](https://github.com/zhich/git_resource/blob/master/Android-Learning/activity_fragment_lifecycle.png)
+
+### Fragment生命周期回调方法含义
+
+- public void onAttach(Context context)
+
+  在 Fragment 已与 Activity 关联时调用 onAttach 方法。从该方法起就可通过 Fragment.getActivity 方法获取与 Fragment 关联的 Activity 对象。此时由于 Fragment 的控件尚未初始化，因此不能操纵控件。
+
+- public void onCreate(Bundle savedInstanceState)
+
+  onCreate 方法在 onAttach 执行完后马上执行。在该方法中可以读取保存的状态，获取、初始化一些数据，可在 Bundle 对象获取一些从 Activity 传递过来的数据。
+
+- public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState)
+
+  在该方法中会创建在 Fragment 显示的 View . inflater 用来装载布局文件；container 是 <fragment\> 标签的父标签对应对象；savedInstanceState 可获取 Fragment 保存的状态，为 null 表示未保存。
+
+- public void onViewCreated(View view,Bundle savedInstanceState)
+
+  创建完 Fragment 中的 View 后会立即调用该方法。参数 view 就是 onCreateView 方法返回的 View 对象。
+
+- public void onActivityCreated(Bundle savedInstanceState)
+
+  该方法在 Activity 的 onCreate 方法执行完之后调用，表示窗口已经初始化完成。在该方法中可以通过 getActivity().findViewById(Id) 来操纵 Activity 中的 view 了。
+
+- public void onStart()
+
+  调用该方法时，Fragment 已经可见了，但还无法与用户交互。
+
+- public void onResume()
+
+  调用该方法时，Fragment 已经可以与用户交互了。
+
+- public void onPause()
+
+  Fragment 活动正在暂停或者它的操作正在 Activity 中被修改，不再与用户交互。在此可做一些需要临时暂停的工作，如保存音乐播放的进度，然后在 onResume 中恢复。
+
+- public void onStop()
+  
+  Fragment 活动正在停止或者它的操作正在 Activity 中被修改，不再对用户可见。
+
+- public void onDestoryView()
+
+  移除在 onCreateView 方法中创建的 View 时调用。
+
+- public void onDestroy()
+
+  做一些最后清理 Fragment 的状态。
+
+- public void onDetach()
+
+  取消 Fragment 与 Activity 的关联时调用。
+
+  
 ## 与Activity通信
 
 
