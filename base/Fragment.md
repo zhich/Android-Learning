@@ -12,8 +12,6 @@
 - [Fragment常用的API](#fragment常用的api)
 - [执行Fragment事务](#执行fragment事务)
 - [Fragment生命周期](#fragment生命周期)
-  - [Fragment依附于Activity的生命状态](#fragment依附于activity的生命状态)
-  - [Fragment生命周期回调方法含义](#fragment生命周期回调方法含义)
 - [与Activity通信](#与activity通信)
 - [Fragment状态的持久化](#fragment状态的持久化)
 
@@ -219,11 +217,15 @@ transaction.commit(); //提交一个事务
 
 ## Fragment生命周期
 
-### Fragment依附于Activity的生命状态
+- Fragment必须依存于Activity
+
+![Mou icon](https://github.com/zhich/git_resource/blob/master/Android-Learning/activity_fragment_lifecycle_0.png)
+
+- Fragment依附于Activity的生命状态
 
 ![Mou icon](https://github.com/zhich/git_resource/blob/master/Android-Learning/activity_fragment_lifecycle.png)
 
-### Fragment生命周期回调方法含义
+**Fragment生命周期回调方法含义**
 
 - public void onAttach(Context context)
 
@@ -276,11 +278,114 @@ transaction.commit(); //提交一个事务
   
 ## 与Activity通信
 
+Fragment 可通过 getActivity() 访问 Activity 实例，并轻松地执行在 Activity 布局中查找 View 等任务。
+
+```Java
+View listView = getActivity().findViewById(R.id.list);
+```
+
+Activity 也可以使用 findFragmentById() 或 findFragmentByTag() , 通过从 FragmentManager 获取对 Fragment 的引用来调用 Fragment 中的方法。
+
+```Java
+ExampleFragment fragment = (ExampleFragment) getFragmentManager().findFragmentById(R.id.example_fragment);
+```
+
+> Fragment 与Activity 之间的交互可以通过 Fragment.setArguments(Bundle args) 以及 Fragment.getArguments() 来实现。
+
+**创建对 Activity 的事件回调**
+
+在某些情况下，可能需要通过 Fragment 与 Activity 共享事件。执行此操作的一个好方法是，在 Fragment 内定义一个回调接口，并要求宿主 Activity 实现它。当 Activity 通过该接口收到回调时，可以根据需要与布局中的其它 Fragment 共享这些信息。
+
+例如，如果一个新闻应用的 Activity 有两个 Fragment , 一个用于显示文章列表（FragmentA），另一个用于显示文章详情（FragmentB），那么 FragmentA 必须在列表项被选定后告知 Activity , 以便它告知 FragmentB 显示该文章详情。
+
+```Java
+public static class FragmentA extends ListFragment {
+
+    OnArticleSelectedListener mListener;
+    ...
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mListener = (OnArticleSelectedListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement OnArticleSelectedListener");
+        }
+    }
+    ...
+
+    // Container Activity must implement this interface
+    public interface OnArticleSelectedListener {
+        public void onArticleSelected(Uri articleUri);
+    }
+    ...
+}
+```
+
+宿主 Activity 会实现 OnArticleSelectedListener 接口并复写 onArticleSelected() , 将来自FragmentA 的事件通知 FragmentB . 为确保宿主 Activity 实现此接口，FragmentA 的 onAttach() 回调方法会通过转换传递到 onAttach() 中的 Activity 来实例化 OnArticleSelectedListener 的实例。如果 Activity 未实现接口，则片段会引发 ClassCastException .
+
+实现时，mListener 成员会保留对 Activity 的 OnArticleSelectedListener 实现的引用，以便 FragmentA 可以通过调用 OnArticleSelectedListener 接口定义的方法与 Activity 共享事件。
 
 ## Fragment状态的持久化
 
+由于 Activity 会经常性地发生配置变化，所以依附于它的 Fragment 就可能需要将其状态保存起来。有两个常用的方法可将 Fragment 的状态持久化。
 
+1. 通过 onSaveInstanceState 与 onRestoreInstanceState 保存和恢复状态。
 
+2. 让 Android 自动帮我们保存 Fragment 状态。
+
+   在 Activity 中保存 Fragment 的方法：FragmentManager.putFragment(Bundle bundle, String key, Fragment fragment) ; 在 Activity 中获取所保存的 Fragment 的方法：FragmentManager.getFragment(Bundle bundle, String key) .
+
+   这个方法仅仅能够保存 Fragment 中的控件状态，比如说 EditText 中用户已经输入的文字（注意！在这里，控件需要设置一个 id , 否则 Android 将不会为我们保存控件的状态），而 Fragment 中需要持久化的变量依然会丢失，此时就需要利用方法 1 了。
+
+以下为状态持久化的事例代码：
+
+**Activity 代码**
+
+```Java
+     FragmentA fragmentA;
+
+     @Override
+     protected void onCreate(@Nullable Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+         setContentView(R.layout.fragment_activity);
+
+         if( savedInstanceState != null ){
+             fragmentA = (FragmentA) getSupportFragmentManager().getFragment(savedInstanceState,"fragmentA");
+         }
+         init();
+     }
+
+     @Override
+     protected void onSaveInstanceState(Bundle outState) {
+         if( fragmentA != null ){
+             getSupportFragmentManager().putFragment(outState,"fragmentA",fragmentA);
+         }
+
+         super.onSaveInstanceState(outState);
+     }
+```
+
+**FragmentA 代码**
+
+```Java
+     @Nullable
+     @Override
+     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+         if ( null != savedInstanceState ){
+             String savedString = savedInstanceState.getString("string");
+         }
+         View root = inflater.inflate(R.layout.fragment_a,null);
+         return root;
+     }
+
+ 	@Override
+     public void onSaveInstanceState(Bundle outState) {
+         outState.putString("string","anAngryAnt");
+         super.onSaveInstanceState(outState);
+     }
+```
 
 
 
