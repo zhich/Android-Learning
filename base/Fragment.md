@@ -290,7 +290,7 @@ Activity 也可以使用 findFragmentById() 或 findFragmentByTag() , 通过从 
 ExampleFragment fragment = (ExampleFragment) getFragmentManager().findFragmentById(R.id.example_fragment);
 ```
 
-> Fragment 与Activity 之间的交互可以通过 Fragment.setArguments(Bundle args) 以及 Fragment.getArguments() 来实现。
+> Fragment 与 Activity 之间的交互可以通过 Fragment.setArguments(Bundle args) 以及 Fragment.getArguments() 来实现。
 
 **创建对 Activity 的事件回调**
 
@@ -323,7 +323,7 @@ public static class FragmentA extends ListFragment {
 }
 ```
 
-宿主 Activity 会实现 OnArticleSelectedListener 接口并复写 onArticleSelected() , 将来自FragmentA 的事件通知 FragmentB . 为确保宿主 Activity 实现此接口，FragmentA 的 onAttach() 回调方法会通过转换传递到 onAttach() 中的 Activity 来实例化 OnArticleSelectedListener 的实例。如果 Activity 未实现接口，则片段会引发 ClassCastException .
+宿主 Activity 会实现 OnArticleSelectedListener 接口并复写 onArticleSelected() , 将来自 FragmentA 的事件通知 FragmentB . 为确保宿主 Activity 实现此接口，FragmentA 的 onAttach() 回调方法会通过转换传递到 onAttach() 中的 Activity 来实例化 OnArticleSelectedListener 的实例。如果 Activity 未实现接口，则片段会引发 ClassCastException .
 
 实现时，mListener 成员会保留对 Activity 的 OnArticleSelectedListener 实现的引用，以便 FragmentA 可以通过调用 OnArticleSelectedListener 接口定义的方法与 Activity 共享事件。
 
@@ -335,7 +335,7 @@ public static class FragmentA extends ListFragment {
 
 2. 让 Android 自动帮我们保存 Fragment 状态。
 
-   在 Activity 中保存 Fragment 的方法：FragmentManager.putFragment(Bundle bundle, String key, Fragment fragment) ; 在 Activity 中获取所保存的 Fragment 的方法：FragmentManager.getFragment(Bundle bundle, String key) .
+   在 Activity 中保存 Fragment 的方法：**FragmentManager.putFragment(Bundle bundle, String key, Fragment fragment)** ; 在 Activity 中获取所保存的 Fragment 的方法：**FragmentManager.getFragment(Bundle bundle, String key)** .
 
    这个方法仅仅能够保存 Fragment 中的控件状态，比如说 EditText 中用户已经输入的文字（注意！在这里，控件需要设置一个 id , 否则 Android 将不会为我们保存控件的状态），而 Fragment 中需要持久化的变量依然会丢失，此时就需要利用方法 1 了。
 
@@ -354,7 +354,7 @@ public static class FragmentA extends ListFragment {
          if( savedInstanceState != null ){
              fragmentA = (FragmentA) getSupportFragmentManager().getFragment(savedInstanceState,"fragmentA");
          }
-         init();
+         ...
      }
 
      @Override
@@ -390,7 +390,10 @@ public static class FragmentA extends ListFragment {
 
 
 
+**参考资料**
 
+- [Android Developers](https://developer.android.com/guide/components/fragments)
+- [LearningNotes](https://github.com/francistao/LearningNotes/blob/master/Part1/Android/Fragment.md)
 
 
 
