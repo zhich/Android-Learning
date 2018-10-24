@@ -217,18 +217,183 @@ transaction.commit(); //提交一个事务
 
 ## Fragment生命周期
 
+- Fragment必须依存于Activity
+
+![Mou icon](https://github.com/zhich/git_resource/blob/master/Android-Learning/activity_fragment_lifecycle_0.png)
+
+- Fragment依附于Activity的生命状态
+
+![Mou icon](https://github.com/zhich/git_resource/blob/master/Android-Learning/activity_fragment_lifecycle.png)
+
+**Fragment生命周期回调方法含义**
+
+- public void onAttach(Context context)
+
+  在 Fragment 已与 Activity 关联时调用 onAttach 方法。从该方法起就可通过 Fragment.getActivity 方法获取与 Fragment 关联的 Activity 对象。此时由于 Fragment 的控件尚未初始化，因此不能操纵控件。
+
+- public void onCreate(Bundle savedInstanceState)
+
+  onCreate 方法在 onAttach 执行完后马上执行。在该方法中可以读取保存的状态，获取、初始化一些数据，可在 Bundle 对象获取一些从 Activity 传递过来的数据。
+
+- public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState)
+
+  在该方法中会创建在 Fragment 显示的 View . inflater 用来装载布局文件；container 是 <fragment\> 标签的父标签对应对象；savedInstanceState 可获取 Fragment 保存的状态，为 null 表示未保存。
+
+- public void onViewCreated(View view,Bundle savedInstanceState)
+
+  创建完 Fragment 中的 View 后会立即调用该方法。参数 view 就是 onCreateView 方法返回的 View 对象。
+
+- public void onActivityCreated(Bundle savedInstanceState)
+
+  该方法在 Activity 的 onCreate 方法执行完之后调用，表示窗口已经初始化完成。在该方法中可以通过 getActivity().findViewById(Id) 来操纵 Activity 中的 view 了。
+
+- public void onStart()
+
+  调用该方法时，Fragment 已经可见了，但还无法与用户交互。
+
+- public void onResume()
+
+  调用该方法时，Fragment 已经可以与用户交互了。
+
+- public void onPause()
+
+  Fragment 活动正在暂停或者它的操作正在 Activity 中被修改，不再与用户交互。在此可做一些需要临时暂停的工作，如保存音乐播放的进度，然后在 onResume 中恢复。
+
+- public void onStop()
+  
+  Fragment 活动正在停止或者它的操作正在 Activity 中被修改，不再对用户可见。
+
+- public void onDestoryView()
+
+  移除在 onCreateView 方法中创建的 View 时调用。
+
+- public void onDestroy()
+
+  做一些最后清理 Fragment 的状态。
+
+- public void onDetach()
+
+  取消 Fragment 与 Activity 的关联时调用。
+
+  
 ## 与Activity通信
 
+Fragment 可通过 getActivity() 访问 Activity 实例，并轻松地执行在 Activity 布局中查找 View 等任务。
+
+```Java
+View listView = getActivity().findViewById(R.id.list);
+```
+
+Activity 也可以使用 findFragmentById() 或 findFragmentByTag() , 通过从 FragmentManager 获取对 Fragment 的引用来调用 Fragment 中的方法。
+
+```Java
+ExampleFragment fragment = (ExampleFragment) getFragmentManager().findFragmentById(R.id.example_fragment);
+```
+
+> Fragment 与 Activity 之间的交互可以通过 Fragment.setArguments(Bundle args) 以及 Fragment.getArguments() 来实现。
+
+**创建对 Activity 的事件回调**
+
+在某些情况下，可能需要通过 Fragment 与 Activity 共享事件。执行此操作的一个好方法是，在 Fragment 内定义一个回调接口，并要求宿主 Activity 实现它。当 Activity 通过该接口收到回调时，可以根据需要与布局中的其它 Fragment 共享这些信息。
+
+例如，如果一个新闻应用的 Activity 有两个 Fragment , 一个用于显示文章列表（FragmentA），另一个用于显示文章详情（FragmentB），那么 FragmentA 必须在列表项被选定后告知 Activity , 以便它告知 FragmentB 显示该文章详情。
+
+```Java
+public static class FragmentA extends ListFragment {
+
+    OnArticleSelectedListener mListener;
+    ...
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mListener = (OnArticleSelectedListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement OnArticleSelectedListener");
+        }
+    }
+    ...
+
+    // Container Activity must implement this interface
+    public interface OnArticleSelectedListener {
+        public void onArticleSelected(Uri articleUri);
+    }
+    ...
+}
+```
+
+宿主 Activity 会实现 OnArticleSelectedListener 接口并复写 onArticleSelected() , 将来自 FragmentA 的事件通知 FragmentB . 为确保宿主 Activity 实现此接口，FragmentA 的 onAttach() 回调方法会通过转换传递到 onAttach() 中的 Activity 来实例化 OnArticleSelectedListener 的实例。如果 Activity 未实现接口，则片段会引发 ClassCastException .
+
+实现时，mListener 成员会保留对 Activity 的 OnArticleSelectedListener 实现的引用，以便 FragmentA 可以通过调用 OnArticleSelectedListener 接口定义的方法与 Activity 共享事件。
 
 ## Fragment状态的持久化
 
+由于 Activity 会经常性地发生配置变化，所以依附于它的 Fragment 就可能需要将其状态保存起来。有两个常用的方法可将 Fragment 的状态持久化。
+
+1. 通过 onSaveInstanceState 与 onRestoreInstanceState 保存和恢复状态。
+
+2. 让 Android 自动帮我们保存 Fragment 状态。
+
+   在 Activity 中保存 Fragment 的方法：**FragmentManager.putFragment(Bundle bundle, String key, Fragment fragment)** ; 在 Activity 中获取所保存的 Fragment 的方法：**FragmentManager.getFragment(Bundle bundle, String key)** .
+
+   这个方法仅仅能够保存 Fragment 中的控件状态，比如说 EditText 中用户已经输入的文字（注意！在这里，控件需要设置一个 id , 否则 Android 将不会为我们保存控件的状态），而 Fragment 中需要持久化的变量依然会丢失，此时就需要利用方法 1 了。
+
+以下为状态持久化的事例代码：
+
+**Activity 代码**
+
+```Java
+     FragmentA fragmentA;
+
+     @Override
+     protected void onCreate(@Nullable Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+         setContentView(R.layout.fragment_activity);
+
+         if( savedInstanceState != null ){
+             fragmentA = (FragmentA) getSupportFragmentManager().getFragment(savedInstanceState,"fragmentA");
+         }
+         ...
+     }
+
+     @Override
+     protected void onSaveInstanceState(Bundle outState) {
+         if( fragmentA != null ){
+             getSupportFragmentManager().putFragment(outState,"fragmentA",fragmentA);
+         }
+
+         super.onSaveInstanceState(outState);
+     }
+```
+
+**FragmentA 代码**
+
+```Java
+     @Nullable
+     @Override
+     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+         if ( null != savedInstanceState ){
+             String savedString = savedInstanceState.getString("string");
+         }
+         View root = inflater.inflate(R.layout.fragment_a,null);
+         return root;
+     }
+
+ 	@Override
+     public void onSaveInstanceState(Bundle outState) {
+         outState.putString("string","anAngryAnt");
+         super.onSaveInstanceState(outState);
+     }
+```
 
 
 
 
+**参考资料**
 
-
-
+- [Android Developers](https://developer.android.com/guide/components/fragments)
+- [LearningNotes](https://github.com/francistao/LearningNotes/blob/master/Part1/Android/Fragment.md)
 
 
 
