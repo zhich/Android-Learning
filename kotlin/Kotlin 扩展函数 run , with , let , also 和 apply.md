@@ -1,12 +1,6 @@
----
-title: Kotlin 扩展函数 run , with , let , also 和 apply
-date: 2018-10-16 21:41:00
-categories: "Kotlin"
-tags:
-     - Android
-     - Kotlin
----
-
+- [函数定义与使用](#函数定义与使用)
+- [函数特点](#函数特点)
+- [函数选择](函数选择)
 
 
 
