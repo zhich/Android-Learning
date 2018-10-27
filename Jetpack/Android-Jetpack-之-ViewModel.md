@@ -91,7 +91,7 @@ ViewModel viewModel = mViewModelStore.get(key);
 
 > ViewModel 里面不要引用 View、或者任何持有 Activity 类的 context , 否则会引发内存泄漏问题。
 
-当 ViewModel 需要 Application 类的 context 来获取资源、查找系统服务等，可以继承 **AndroidViewModel **类。 
+当 ViewModel 需要 Application 类的 context 来获取资源、查找系统服务等，可以继承 **AndroidViewModel** 类。 
 
 ```Kotlin
 class MyAndroidViewModel(application: Application) : AndroidViewModel(application) {
