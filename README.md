@@ -1,3 +1,3 @@
-# Android-Learning
+# AndroidDev
 
 > 这个仓库是本人进行 Android 学习的一些笔记，有参考或引用到其它资料的内容都会在每篇文章末尾注明。如有侵权，请告知我删除。
