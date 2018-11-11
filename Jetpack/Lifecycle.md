@@ -19,7 +19,7 @@
 
 Lifecycle 是一个类，它持有 Activity / Fragment 生命周期状态的信息，并允许其它对象观察此状态。
 
-### Lifecycle 使用
+### Lifecycle使用
 
 [添加相关依赖](https://developer.android.com/topic/libraries/architecture/adding-components)
 
