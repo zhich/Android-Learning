@@ -170,7 +170,7 @@ class LiveDataActivity : AppCompatActivity() {
 
 ### 源码解析
 
-#### observe 注册流程
+#### observe注册流程
 
 LiveData 通过 observe() 方法将被观察者 LifecycleOwner (Activity / Fragment) 和观察者 Observer 关联起来。
 
