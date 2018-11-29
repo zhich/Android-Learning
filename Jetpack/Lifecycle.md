@@ -276,7 +276,7 @@ public interface LifecycleOwner {
 }
 ```
 
-从源码可知 getLifecycle() 方法返回的是 `LifecycleRegistry` 对象，而 LifecycleRegistry 是 Lifecycle 的子类，所有对LifecycleObserver 的操作都是由 LifecycleRegistry 完成的。 
+从源码可知 getLifecycle() 方法返回的是 `LifecycleRegistry` 对象，而 LifecycleRegistry 是 Lifecycle 的子类，所有对 LifecycleObserver 的操作都是由 LifecycleRegistry 完成的。 
 
 #### LifecycleRegistry
 
@@ -353,7 +353,7 @@ public class LifecycleRegistry extends Lifecycle {
         }
         while (!isSynced()) {
             mNewEventOccurred = false;
-            // State中，状态值是从 DESTROYED - INITIALIZED - CREATED - STARTED - RESUMED 增大
+            // State 中，状态值是从 DESTROYED - INITIALIZED - CREATED - STARTED - RESUMED 增大
             // 如果当前状态值 < Observer 状态值，需要通知 Observer 减小状态值，直到等于当前状态值
             if (mState.compareTo(mObserverMap.eldest().getValue().mState) < 0) {
                 backwardPass(lifecycleOwner);

@@ -166,7 +166,7 @@ class LiveDataActivity : AppCompatActivity() {
 }
 ```
 
-> 当组件（Activity）处于激活状态（onActive）时注册广播，处于非激活状态时注销广播（onInactive）。
+> 当组件（Activity）处于激活状态（onActive）时注册广播，处于非激活状态（onInactive）时注销广播。
 
 ### 源码解析
 
